@@ -11,7 +11,9 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "users")
+@Table(name = "users", indexes = {
+    @Index(name = "idx_email", columnList = "email")
+})
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -24,26 +26,20 @@ public class User {
     
     @NotBlank(message = "Email is required")
     @Email(message = "Email should be valid")
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false, unique = true, length = 255)
     private String email;
     
     @NotBlank(message = "Name is required")
-    @Column(nullable = false)
+    @Column(nullable = false, length = 100)
     private String name;
     
-    @Column(name = "phone")
-    private String phone;
+    @Column(length = 20)
+    private String phoneNumber;
     
-    @Column(name = "address")
+    @Column(length = 255)
     private String address;
     
-    @Column(name = "city")
-    private String city;
-    
-    @Column(name = "country")
-    private String country;
-    
-    @Column(name = "created_at", updatable = false)
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
     
     @Column(name = "updated_at")
