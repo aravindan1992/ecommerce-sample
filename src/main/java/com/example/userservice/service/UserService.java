@@ -1,5 +1,6 @@
 package com.example.userservice.service;
 
+import com.example.userservice.dto.UserResponse;
 import com.example.userservice.exception.InvalidEmailException;
 import com.example.userservice.exception.UserNotFoundException;
 import com.example.userservice.model.User;
@@ -18,65 +19,48 @@ public class UserService {
     
     private final UserRepository userRepository;
     
-    // RFC 5322 compliant email regex pattern
     private static final String EMAIL_REGEX = 
-        "^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}$";
-    
+        "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$";
     private static final Pattern EMAIL_PATTERN = Pattern.compile(EMAIL_REGEX);
     
-    /**
-     * Retrieve user details by email ID
-     * @param email the email to search for
-     * @return User object if found
-     * @throws InvalidEmailException if email format is invalid
-     * @throws UserNotFoundException if user is not found
-     */
     @Transactional(readOnly = true)
-    public User getUserByEmail(String email) {
-        log.info("Attempting to retrieve user with email: {}", email);
+    public UserResponse getUserByEmail(String email) {
+        log.info("Fetching user details for email: {}", email);
         
         // Validate email format
-        if (email == null || email.trim().isEmpty()) {
-            log.error("Email is null or empty");
-            throw new InvalidEmailException("Email cannot be null or empty");
-        }
-        
         if (!isValidEmail(email)) {
-            log.error("Invalid email format: {}", email);
-            throw new InvalidEmailException("Invalid email format: " + email);
+            log.error("Invalid email format provided: {}", email);
+            throw new InvalidEmailException(email);
         }
         
         // Perform case-insensitive lookup
-        User user = userRepository.findByEmailIgnoreCase(email.trim())
-            .orElseThrow(() -> {
-                log.error("User not found with email: {}", email);
-                return new UserNotFoundException("User not found with email: " + email);
-            });
+        User user = userRepository.findByEmailIgnoreCase(email)
+                .orElseThrow(() -> {
+                    log.error("User not found with email: {}", email);
+                    return new UserNotFoundException(email);
+                });
         
-        log.info("Successfully retrieved user with email: {}", email);
-        return user;
+        log.info("Successfully retrieved user details for email: {}", email);
+        
+        return mapToUserResponse(user);
     }
     
-    /**
-     * Validate email format using regex pattern
-     * @param email the email to validate
-     * @return true if valid, false otherwise
-     */
     private boolean isValidEmail(String email) {
-        if (email == null) {
+        if (email == null || email.trim().isEmpty()) {
             return false;
         }
         return EMAIL_PATTERN.matcher(email.trim()).matches();
     }
     
-    /**
-     * Check if user exists by email
-     * @param email the email to check
-     * @return true if user exists, false otherwise
-     */
-    @Transactional(readOnly = true)
-    public boolean userExists(String email) {
-        log.debug("Checking if user exists with email: {}", email);
-        return userRepository.existsByEmailIgnoreCase(email);
+    private UserResponse mapToUserResponse(User user) {
+        return UserResponse.builder()
+                .id(user.getId())
+                .email(user.getEmail())
+                .name(user.getName())
+                .phoneNumber(user.getPhoneNumber())
+                .address(user.getAddress())
+                .createdAt(user.getCreatedAt())
+                .updatedAt(user.getUpdatedAt())
+                .build();
     }
 }
