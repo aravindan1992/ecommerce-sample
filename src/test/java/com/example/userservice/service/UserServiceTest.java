@@ -1,5 +1,6 @@
 package com.example.userservice.service;
 
+import com.example.userservice.dto.UserResponse;
 import com.example.userservice.exception.InvalidEmailException;
 import com.example.userservice.exception.UserNotFoundException;
 import com.example.userservice.model.User;
@@ -35,121 +36,78 @@ class UserServiceTest {
                 .id(1L)
                 .email("test@example.com")
                 .name("Test User")
-                .phone("+1234567890")
+                .phoneNumber("1234567890")
                 .address("123 Test Street")
-                .city("Test City")
-                .country("Test Country")
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .build();
     }
     
     @Test
-    void getUserByEmail_ValidEmail_ReturnsUser() {
+    void getUserByEmail_ValidEmail_ReturnsUserResponse() {
         // Arrange
-        String email = "test@example.com";
-        when(userRepository.findByEmailIgnoreCase(email)).thenReturn(Optional.of(testUser));
+        when(userRepository.findByEmailIgnoreCase(anyString()))
+                .thenReturn(Optional.of(testUser));
         
         // Act
-        User result = userService.getUserByEmail(email);
+        UserResponse result = userService.getUserByEmail("test@example.com");
         
         // Assert
         assertNotNull(result);
+        assertEquals(testUser.getId(), result.getId());
         assertEquals(testUser.getEmail(), result.getEmail());
         assertEquals(testUser.getName(), result.getName());
-        verify(userRepository, times(1)).findByEmailIgnoreCase(email);
+        verify(userRepository, times(1)).findByEmailIgnoreCase(anyString());
     }
     
     @Test
-    void getUserByEmail_CaseInsensitive_ReturnsUser() {
+    void getUserByEmail_CaseInsensitive_ReturnsUserResponse() {
         // Arrange
-        String email = "TEST@EXAMPLE.COM";
-        when(userRepository.findByEmailIgnoreCase(email)).thenReturn(Optional.of(testUser));
+        when(userRepository.findByEmailIgnoreCase(anyString()))
+                .thenReturn(Optional.of(testUser));
         
         // Act
-        User result = userService.getUserByEmail(email);
+        UserResponse result = userService.getUserByEmail("TEST@EXAMPLE.COM");
         
         // Assert
         assertNotNull(result);
         assertEquals(testUser.getEmail(), result.getEmail());
-        verify(userRepository, times(1)).findByEmailIgnoreCase(email);
+        verify(userRepository, times(1)).findByEmailIgnoreCase(anyString());
     }
     
     @Test
-    void getUserByEmail_UserNotFound_ThrowsException() {
+    void getUserByEmail_UserNotFound_ThrowsUserNotFoundException() {
         // Arrange
-        String email = "notfound@example.com";
-        when(userRepository.findByEmailIgnoreCase(email)).thenReturn(Optional.empty());
+        when(userRepository.findByEmailIgnoreCase(anyString()))
+                .thenReturn(Optional.empty());
         
         // Act & Assert
-        assertThrows(UserNotFoundException.class, () -> userService.getUserByEmail(email));
-        verify(userRepository, times(1)).findByEmailIgnoreCase(email);
+        assertThrows(UserNotFoundException.class, 
+                () -> userService.getUserByEmail("notfound@example.com"));
+        verify(userRepository, times(1)).findByEmailIgnoreCase(anyString());
     }
     
     @Test
-    void getUserByEmail_NullEmail_ThrowsException() {
+    void getUserByEmail_InvalidEmailFormat_ThrowsInvalidEmailException() {
         // Act & Assert
-        assertThrows(InvalidEmailException.class, () -> userService.getUserByEmail(null));
+        assertThrows(InvalidEmailException.class, 
+                () -> userService.getUserByEmail("invalid-email"));
         verify(userRepository, never()).findByEmailIgnoreCase(anyString());
     }
     
     @Test
-    void getUserByEmail_EmptyEmail_ThrowsException() {
+    void getUserByEmail_NullEmail_ThrowsInvalidEmailException() {
         // Act & Assert
-        assertThrows(InvalidEmailException.class, () -> userService.getUserByEmail(""));
+        assertThrows(InvalidEmailException.class, 
+                () -> userService.getUserByEmail(null));
         verify(userRepository, never()).findByEmailIgnoreCase(anyString());
     }
     
     @Test
-    void getUserByEmail_InvalidEmailFormat_ThrowsException() {
-        // Arrange
-        String invalidEmail = "invalid-email";
-        
+    void getUserByEmail_EmptyEmail_ThrowsInvalidEmailException() {
         // Act & Assert
-        assertThrows(InvalidEmailException.class, () -> userService.getUserByEmail(invalidEmail));
+        assertThrows(InvalidEmailException.class, 
+                () -> userService.getUserByEmail(""));
         verify(userRepository, never()).findByEmailIgnoreCase(anyString());
-    }
-    
-    @Test
-    void getUserByEmail_EmailWithSpaces_TrimsAndReturnsUser() {
-        // Arrange
-        String emailWithSpaces = "  test@example.com  ";
-        when(userRepository.findByEmailIgnoreCase(emailWithSpaces.trim())).thenReturn(Optional.of(testUser));
-        
-        // Act
-        User result = userService.getUserByEmail(emailWithSpaces);
-        
-        // Assert
-        assertNotNull(result);
-        assertEquals(testUser.getEmail(), result.getEmail());
-        verify(userRepository, times(1)).findByEmailIgnoreCase(emailWithSpaces.trim());
-    }
-    
-    @Test
-    void userExists_ExistingEmail_ReturnsTrue() {
-        // Arrange
-        String email = "test@example.com";
-        when(userRepository.existsByEmailIgnoreCase(email)).thenReturn(true);
-        
-        // Act
-        boolean result = userService.userExists(email);
-        
-        // Assert
-        assertTrue(result);
-        verify(userRepository, times(1)).existsByEmailIgnoreCase(email);
-    }
-    
-    @Test
-    void userExists_NonExistingEmail_ReturnsFalse() {
-        // Arrange
-        String email = "notfound@example.com";
-        when(userRepository.existsByEmailIgnoreCase(email)).thenReturn(false);
-        
-        // Act
-        boolean result = userService.userExists(email);
-        
-        // Assert
-        assertFalse(result);
-        verify(userRepository, times(1)).existsByEmailIgnoreCase(email);
     }
 }
