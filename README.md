@@ -1,34 +1,31 @@
 # User Service - Retrieve User Details by Email ID
 
-A Spring Boot REST API service that retrieves user details by email ID with case-insensitive lookup, email validation, and comprehensive error handling.
+## Overview
+This Spring Boot application provides a REST API service to retrieve user details by email ID. The service performs case-insensitive email lookups, validates email formats, and returns appropriate responses based on the query results.
 
 ## Features
-
 - ✅ Retrieve user details by email ID
 - ✅ Case-insensitive email lookup
-- ✅ Email format validation
-- ✅ Comprehensive error handling
-- ✅ RESTful API design
-- ✅ Logging with SLF4J
+- ✅ Email format validation using regex
+- ✅ Comprehensive error handling with meaningful messages
+- ✅ RESTful API design with proper HTTP status codes
+- ✅ Logging using SLF4J
 - ✅ Unit and Integration tests
-- ✅ H2 in-memory database
-- ✅ Global exception handling
-- ✅ Input validation
+- ✅ H2 in-memory database for development and testing
+- ✅ Global exception handling using @ControllerAdvice
 
 ## Technology Stack
-
 - **Java**: 17
-- **Spring Boot**: 3.1.5
-- **Spring Data JPA**: Database operations
-- **Spring Validation**: Input validation
+- **Spring Boot**: 3.2.0
+- **Spring Data JPA**: For database operations
+- **Spring Validation**: For input validation
 - **H2 Database**: In-memory database for testing
-- **Lombok**: Reduce boilerplate code
-- **JUnit 5**: Unit testing
-- **Mockito**: Mocking framework
+- **Lombok**: To reduce boilerplate code
+- **JUnit 5**: For unit testing
+- **Mockito**: For mocking in tests
 - **Maven**: Build tool
 
 ## Prerequisites
-
 - Java 17 or higher
 - Maven 3.6 or higher
 
@@ -60,58 +57,32 @@ Alternatively, you can run the JAR file:
 java -jar target/user-service-1.0.0.jar
 ```
 
-The application will start on `http://localhost:8080`
-
 ## API Endpoints
 
-### 1. Get User by Email (Query Parameter)
-```http
-GET /api/v1/users?email={email}
-```
+### 1. Get User by Email
+**Endpoint**: `GET /api/v1/users?email={email}`
 
-**Example Request:**
+**Description**: Retrieves user details by email ID (case-insensitive)
+
+**Request Example**:
 ```bash
 curl -X GET "http://localhost:8080/api/v1/users?email=test@example.com"
 ```
 
-**Success Response (200 OK):**
+**Success Response (200 OK)**:
 ```json
 {
   "id": 1,
   "email": "test@example.com",
   "name": "Test User",
-  "phone": "+1234567890",
+  "phoneNumber": "1234567890",
   "address": "123 Test Street",
-  "city": "Test City",
-  "country": "Test Country",
   "createdAt": "2024-01-15T10:30:00",
   "updatedAt": "2024-01-15T10:30:00"
 }
 ```
 
-### 2. Get User by Email (Path Variable)
-```http
-GET /api/v1/users/email/{email}
-```
-
-**Example Request:**
-```bash
-curl -X GET "http://localhost:8080/api/v1/users/email/test@example.com"
-```
-
-### 3. Health Check
-```http
-GET /api/v1/users/health
-```
-
-**Example Request:**
-```bash
-curl -X GET "http://localhost:8080/api/v1/users/health"
-```
-
-## Error Responses
-
-### User Not Found (404)
+**Error Response - User Not Found (404 NOT FOUND)**:
 ```json
 {
   "status": 404,
@@ -122,7 +93,7 @@ curl -X GET "http://localhost:8080/api/v1/users/health"
 }
 ```
 
-### Invalid Email Format (400)
+**Error Response - Invalid Email (400 BAD REQUEST)**:
 ```json
 {
   "status": 400,
@@ -133,85 +104,97 @@ curl -X GET "http://localhost:8080/api/v1/users/health"
 }
 ```
 
-### Missing Email Parameter (400)
-```json
-{
-  "status": 400,
-  "error": "Bad Request",
-  "message": "Required parameter 'email' is missing",
-  "path": "/api/v1/users",
-  "timestamp": "2024-01-15T10:30:00"
-}
+### 2. Health Check
+**Endpoint**: `GET /api/v1/users/health`
+
+**Description**: Check if the service is running
+
+**Request Example**:
+```bash
+curl -X GET "http://localhost:8080/api/v1/users/health"
+```
+
+**Response (200 OK)**:
+```
+User Service is running
 ```
 
 ## Database Configuration
 
-The application uses H2 in-memory database for development and testing.
+The application uses H2 in-memory database by default. You can access the H2 console at:
+```
+http://localhost:8080/h2-console
+```
 
-### H2 Console Access
-- URL: `http://localhost:8080/h2-console`
+**Connection Details**:
 - JDBC URL: `jdbc:h2:mem:userdb`
 - Username: `sa`
 - Password: (leave empty)
 
-### Sample Data
-
-Sample data is automatically loaded from `data.sql` file on application startup.
-
 ## Testing
 
-### Run Unit Tests
+### Run All Tests
+```bash
+mvn test
+```
+
+### Run Specific Test Class
 ```bash
 mvn test -Dtest=UserServiceTest
 ```
 
-### Run Integration Tests
-```bash
-mvn test -Dtest=UserControllerIntegrationTest
+### Test Coverage
+The project includes:
+- **Unit Tests**: For Service and Controller layers
+- **Integration Tests**: End-to-end API testing
+- **Test Coverage**: Covers positive and negative scenarios
+
+## Email Validation
+The service validates email format using the following regex pattern:
+```
+^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$
 ```
 
-### Run All Tests with Coverage
-```bash
-mvn clean test jacoco:report
-```
+Valid email examples:
+- `user@example.com`
+- `test.user@example.co.uk`
+- `user+tag@example.com`
+
+Invalid email examples:
+- `invalid-email`
+- `@example.com`
+- `user@`
 
 ## Logging
+The application uses SLF4J for logging. Log levels can be configured in `application.properties`.
 
-The application uses SLF4J for logging. Log levels can be configured in `application.properties`:
+**Log Levels**:
+- `INFO`: General application flow
+- `DEBUG`: Detailed debugging information
+- `ERROR`: Error conditions
 
-```properties
-logging.level.com.example.userservice=DEBUG
-```
-
-Logs include:
-- Request/Response information
-- Database queries
-- Error stack traces
-- Business logic flow
+## Error Handling
+The application implements comprehensive error handling:
+- **400 Bad Request**: Invalid email format or validation errors
+- **404 Not Found**: User not found
+- **500 Internal Server Error**: Unexpected errors
 
 ## Security Considerations
-
-- Email validation prevents injection attacks
-- Input sanitization through Spring Validation
+- Input validation on all endpoints
+- Email format validation
+- SQL injection prevention through JPA
 - Proper error messages without exposing sensitive information
-- Case-insensitive lookup prevents enumeration attacks
 
-## Production Deployment
+## Future Enhancements
+- Add authentication and authorization
+- Implement caching for frequently accessed users
+- Add pagination for bulk user retrieval
+- Implement rate limiting
+- Add API documentation using Swagger/OpenAPI
+- Support for multiple database profiles (PostgreSQL, MySQL)
 
-For production deployment, consider:
-
-1. **Replace H2 with a production database** (PostgreSQL, MySQL, etc.)
-2. **Enable security** (Spring Security)
-3. **Add API documentation** (Swagger/OpenAPI)
-4. **Configure production logging**
-5. **Add monitoring and metrics** (Spring Actuator)
-6. **Implement rate limiting**
-7. **Add caching** (Redis, Caffeine)
+## Jira Reference
+**Issue**: SCRUM-6 - Create service to retrieve user details by email ID
 
 ## License
-
 This project is licensed under the MIT License.
-
-## Contact
-
-For questions or support, please contact the development team.
