@@ -1,6 +1,6 @@
 package com.example.userservice.service;
 
-import com.example.userservice.entity.User;
+import com.example.userservice.model.User;
 import com.example.userservice.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
