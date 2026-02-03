@@ -1,66 +1,50 @@
 package com.example.userservice.service;
 
-import com.example.userservice.dto.UserResponse;
-import com.example.userservice.exception.InvalidEmailException;
-import com.example.userservice.exception.UserNotFoundException;
-import com.example.userservice.model.User;
-import com.example.userservice.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import com.example.userservice.dto.UserResponseDTO;
 
-import java.util.regex.Pattern;
+import java.util.List;
 
-@Service
-@RequiredArgsConstructor
-@Slf4j
-public class UserService {
-    
-    private final UserRepository userRepository;
-    
-    private static final String EMAIL_REGEX = 
-        "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$";
-    private static final Pattern EMAIL_PATTERN = Pattern.compile(EMAIL_REGEX);
-    
-    @Transactional(readOnly = true)
-    public UserResponse getUserByEmail(String email) {
-        log.info("Fetching user details for email: {}", email);
-        
-        // Validate email format
-        if (!isValidEmail(email)) {
-            log.error("Invalid email format provided: {}", email);
-            throw new InvalidEmailException(email);
-        }
-        
-        // Perform case-insensitive lookup
-        User user = userRepository.findByEmailIgnoreCase(email)
-                .orElseThrow(() -> {
-                    log.error("User not found with email: {}", email);
-                    return new UserNotFoundException(email);
-                });
-        
-        log.info("Successfully retrieved user details for email: {}", email);
-        
-        return mapToUserResponse(user);
-    }
-    
-    private boolean isValidEmail(String email) {
-        if (email == null || email.trim().isEmpty()) {
-            return false;
-        }
-        return EMAIL_PATTERN.matcher(email.trim()).matches();
-    }
-    
-    private UserResponse mapToUserResponse(User user) {
-        return UserResponse.builder()
-                .id(user.getId())
-                .email(user.getEmail())
-                .name(user.getName())
-                .phoneNumber(user.getPhoneNumber())
-                .address(user.getAddress())
-                .createdAt(user.getCreatedAt())
-                .updatedAt(user.getUpdatedAt())
-                .build();
-    }
+/**
+ * Service interface for user operations.
+ * Defines business logic methods for user management.
+ * 
+ * @author Automation Engineer
+ * @version 1.0.0
+ * @since 2024-01-01
+ */
+public interface UserService {
+
+    /**
+     * Searches for users by name using case-insensitive partial matching.
+     * 
+     * @param name the name or partial name to search for
+     * @return list of users matching the search criteria
+     * @throws com.example.userservice.exception.InvalidInputException if name is invalid
+     */
+    List<UserResponseDTO> findUsersByName(String name);
+
+    /**
+     * Searches for active users by name using case-insensitive partial matching.
+     * 
+     * @param name the name or partial name to search for
+     * @return list of active users matching the search criteria
+     * @throws com.example.userservice.exception.InvalidInputException if name is invalid
+     */
+    List<UserResponseDTO> findActiveUsersByName(String name);
+
+    /**
+     * Retrieves a user by their unique identifier.
+     * 
+     * @param id the user ID
+     * @return the user details
+     * @throws com.example.userservice.exception.UserNotFoundException if user not found
+     */
+    UserResponseDTO getUserById(Long id);
+
+    /**
+     * Retrieves all users in the system.
+     * 
+     * @return list of all users
+     */
+    List<UserResponseDTO> getAllUsers();
 }
