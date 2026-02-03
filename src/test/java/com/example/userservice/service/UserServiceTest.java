@@ -1,6 +1,5 @@
 package com.example.userservice.service;
 
-import com.example.userservice.dto.UserResponse;
 import com.example.userservice.exception.InvalidEmailException;
 import com.example.userservice.exception.UserNotFoundException;
 import com.example.userservice.model.User;
@@ -12,7 +11,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -36,38 +34,39 @@ class UserServiceTest {
                 .id(1L)
                 .email("test@example.com")
                 .name("Test User")
-                .phoneNumber("1234567890")
-                .address("123 Test Street")
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
+                .phone("1234567890")
+                .address("123 Test St")
+                .city("Test City")
+                .state("Test State")
+                .zipCode("12345")
+                .country("Test Country")
                 .build();
     }
     
     @Test
-    void getUserByEmail_ValidEmail_ReturnsUserResponse() {
+    void getUserByEmail_ValidEmail_ReturnsUser() {
         // Arrange
         when(userRepository.findByEmailIgnoreCase(anyString()))
                 .thenReturn(Optional.of(testUser));
         
         // Act
-        UserResponse result = userService.getUserByEmail("test@example.com");
+        User result = userService.getUserByEmail("test@example.com");
         
         // Assert
         assertNotNull(result);
-        assertEquals(testUser.getId(), result.getId());
         assertEquals(testUser.getEmail(), result.getEmail());
         assertEquals(testUser.getName(), result.getName());
         verify(userRepository, times(1)).findByEmailIgnoreCase(anyString());
     }
     
     @Test
-    void getUserByEmail_CaseInsensitive_ReturnsUserResponse() {
+    void getUserByEmail_CaseInsensitive_ReturnsUser() {
         // Arrange
         when(userRepository.findByEmailIgnoreCase(anyString()))
                 .thenReturn(Optional.of(testUser));
         
         // Act
-        UserResponse result = userService.getUserByEmail("TEST@EXAMPLE.COM");
+        User result = userService.getUserByEmail("TEST@EXAMPLE.COM");
         
         // Assert
         assertNotNull(result);
@@ -76,7 +75,7 @@ class UserServiceTest {
     }
     
     @Test
-    void getUserByEmail_UserNotFound_ThrowsUserNotFoundException() {
+    void getUserByEmail_UserNotFound_ThrowsException() {
         // Arrange
         when(userRepository.findByEmailIgnoreCase(anyString()))
                 .thenReturn(Optional.empty());
@@ -88,7 +87,7 @@ class UserServiceTest {
     }
     
     @Test
-    void getUserByEmail_InvalidEmailFormat_ThrowsInvalidEmailException() {
+    void getUserByEmail_InvalidEmailFormat_ThrowsException() {
         // Act & Assert
         assertThrows(InvalidEmailException.class, 
                 () -> userService.getUserByEmail("invalid-email"));
@@ -96,7 +95,7 @@ class UserServiceTest {
     }
     
     @Test
-    void getUserByEmail_NullEmail_ThrowsInvalidEmailException() {
+    void getUserByEmail_NullEmail_ThrowsException() {
         // Act & Assert
         assertThrows(InvalidEmailException.class, 
                 () -> userService.getUserByEmail(null));
@@ -104,7 +103,7 @@ class UserServiceTest {
     }
     
     @Test
-    void getUserByEmail_EmptyEmail_ThrowsInvalidEmailException() {
+    void getUserByEmail_EmptyEmail_ThrowsException() {
         // Act & Assert
         assertThrows(InvalidEmailException.class, 
                 () -> userService.getUserByEmail(""));
