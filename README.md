@@ -1,18 +1,19 @@
 # User Service - Retrieve User Details by Email ID
 
 ## Overview
-This Spring Boot application provides a REST API service to retrieve user details by email ID. The service performs case-insensitive email lookups, validates email formats, and returns appropriate responses based on the query results.
+This is a Spring Boot 3.x application that provides a REST API service to retrieve user details based on email ID. The service implements case-insensitive email lookup, email format validation, and comprehensive error handling.
 
 ## Features
-- ✅ Retrieve user details by email ID
+- ✅ REST API endpoint to retrieve user by email ID
 - ✅ Case-insensitive email lookup
-- ✅ Email format validation using regex
-- ✅ Comprehensive error handling with meaningful messages
-- ✅ RESTful API design with proper HTTP status codes
-- ✅ Logging using SLF4J
-- ✅ Unit and Integration tests
-- ✅ H2 in-memory database for development and testing
+- ✅ Email format validation
+- ✅ Comprehensive error handling with meaningful error messages
 - ✅ Global exception handling using @ControllerAdvice
+- ✅ Logging using SLF4J
+- ✅ Unit tests for Service and Controller layers
+- ✅ Integration tests
+- ✅ H2 in-memory database for testing
+- ✅ Clean code architecture with proper package structure
 
 ## Technology Stack
 - **Java**: 17
@@ -21,9 +22,38 @@ This Spring Boot application provides a REST API service to retrieve user detail
 - **Spring Validation**: For input validation
 - **H2 Database**: In-memory database for testing
 - **Lombok**: To reduce boilerplate code
-- **JUnit 5**: For unit testing
+- **JUnit 5**: For unit and integration testing
 - **Mockito**: For mocking in tests
 - **Maven**: Build tool
+
+## Project Structure
+```
+user-service/
+├── src/main/java/com/example/userservice/
+│   ├── UserServiceApplication.java          # Main application class
+│   ├── controller/
+│   │   └── UserController.java              # REST API endpoints
+│   ├── service/
+│   │   └── UserService.java                 # Business logic
+│   ├── repository/
+│   │   └── UserRepository.java              # Database operations
+│   ├── model/
+│   │   └── User.java                        # User entity
+│   └── exception/
+│       ├── UserNotFoundException.java       # Custom exception
+│       ├── InvalidEmailException.java       # Custom exception
+│       ├── GlobalExceptionHandler.java      # Global exception handler
+│       └── ErrorResponse.java               # Error response model
+├── src/main/resources/
+│   └── application.properties               # Application configuration
+└── src/test/java/com/example/userservice/
+    ├── controller/
+    │   └── UserControllerTest.java          # Controller unit tests
+    ├── service/
+    │   └── UserServiceTest.java             # Service unit tests
+    └── integration/
+        └── UserServiceIntegrationTest.java  # Integration tests
+```
 
 ## Prerequisites
 - Java 17 or higher
@@ -57,79 +87,90 @@ Alternatively, you can run the JAR file:
 java -jar target/user-service-1.0.0.jar
 ```
 
+The application will start on `http://localhost:8080`
+
 ## API Endpoints
 
-### 1. Get User by Email
+### 1. Get User by Email (Query Parameter)
 **Endpoint**: `GET /api/v1/users?email={email}`
 
-**Description**: Retrieves user details by email ID (case-insensitive)
-
-**Request Example**:
+**Example Request**:
 ```bash
 curl -X GET "http://localhost:8080/api/v1/users?email=test@example.com"
 ```
 
-**Success Response (200 OK)**:
+**Success Response** (200 OK):
 ```json
 {
   "id": 1,
   "email": "test@example.com",
   "name": "Test User",
-  "phoneNumber": "1234567890",
-  "address": "123 Test Street",
-  "createdAt": "2024-01-15T10:30:00",
-  "updatedAt": "2024-01-15T10:30:00"
+  "phone": "1234567890",
+  "address": "123 Test St",
+  "city": "Test City",
+  "state": "Test State",
+  "zipCode": "12345",
+  "country": "Test Country"
 }
 ```
 
-**Error Response - User Not Found (404 NOT FOUND)**:
+### 2. Get User by Email (Path Variable)
+**Endpoint**: `GET /api/v1/users/{email}`
+
+**Example Request**:
+```bash
+curl -X GET "http://localhost:8080/api/v1/users/test@example.com"
+```
+
+**Success Response** (200 OK):
 ```json
 {
+  "id": 1,
+  "email": "test@example.com",
+  "name": "Test User",
+  "phone": "1234567890",
+  "address": "123 Test St",
+  "city": "Test City",
+  "state": "Test State",
+  "zipCode": "12345",
+  "country": "Test Country"
+}
+```
+
+## Error Responses
+
+### User Not Found (404)
+```json
+{
+  "timestamp": "2024-01-15T10:30:00",
   "status": 404,
   "error": "Not Found",
   "message": "User not found with email: notfound@example.com",
-  "path": "/api/v1/users",
-  "timestamp": "2024-01-15T10:30:00"
+  "path": "/api/v1/users"
 }
 ```
 
-**Error Response - Invalid Email (400 BAD REQUEST)**:
+### Invalid Email Format (400)
 ```json
 {
+  "timestamp": "2024-01-15T10:30:00",
   "status": 400,
   "error": "Bad Request",
   "message": "Invalid email format: invalid-email",
-  "path": "/api/v1/users",
-  "timestamp": "2024-01-15T10:30:00"
+  "path": "/api/v1/users"
 }
 ```
 
-### 2. Health Check
-**Endpoint**: `GET /api/v1/users/health`
-
-**Description**: Check if the service is running
-
-**Request Example**:
-```bash
-curl -X GET "http://localhost:8080/api/v1/users/health"
+### Validation Error (400)
+```json
+{
+  "timestamp": "2024-01-15T10:30:00",
+  "status": 400,
+  "error": "Bad Request",
+  "message": "email: Email should be valid",
+  "path": "/api/v1/users"
+}
 ```
-
-**Response (200 OK)**:
-```
-User Service is running
-```
-
-## Database Configuration
-
-The application uses H2 in-memory database by default. You can access the H2 console at:
-```
-http://localhost:8080/h2-console
-```
-
-**Connection Details**:
-- JDBC URL: `jdbc:h2:mem:userdb`
-- Username: `sa`
-- Password: (leave empty)
 
 ## Testing
 
@@ -143,58 +184,118 @@ mvn test
 mvn test -Dtest=UserServiceTest
 ```
 
+### Run Integration Tests
+```bash
+mvn verify
+```
+
 ### Test Coverage
 The project includes:
-- **Unit Tests**: For Service and Controller layers
-- **Integration Tests**: End-to-end API testing
-- **Test Coverage**: Covers positive and negative scenarios
+- **Unit Tests**: Testing individual components (Service, Controller)
+- **Integration Tests**: Testing the complete flow from API to database
+- **Test Cases**:
+  - Valid email lookup
+  - Case-insensitive email lookup
+  - User not found scenario
+  - Invalid email format
+  - Null/empty email validation
 
-## Email Validation
-The service validates email format using the following regex pattern:
+## H2 Database Console
+For development and testing, you can access the H2 database console:
+
+**URL**: `http://localhost:8080/h2-console`
+
+**Connection Details**:
+- JDBC URL: `jdbc:h2:mem:userdb`
+- Username: `sa`
+- Password: (leave empty)
+
+## Configuration
+
+### Database Configuration
+The application uses H2 in-memory database by default. To use a different database, update `application.properties`:
+
+```properties
+# For MySQL
+spring.datasource.url=jdbc:mysql://localhost:3306/userdb
+spring.datasource.username=root
+spring.datasource.password=password
+spring.jpa.database-platform=org.hibernate.dialect.MySQLDialect
+
+# For PostgreSQL
+spring.datasource.url=jdbc:postgresql://localhost:5432/userdb
+spring.datasource.username=postgres
+spring.datasource.password=password
+spring.jpa.database-platform=org.hibernate.dialect.PostgreSQLDialect
 ```
-^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$
+
+### Logging Configuration
+Logging levels can be adjusted in `application.properties`:
+```properties
+logging.level.root=INFO
+logging.level.com.example.userservice=DEBUG
 ```
-
-Valid email examples:
-- `user@example.com`
-- `test.user@example.co.uk`
-- `user+tag@example.com`
-
-Invalid email examples:
-- `invalid-email`
-- `@example.com`
-- `user@`
-
-## Logging
-The application uses SLF4J for logging. Log levels can be configured in `application.properties`.
-
-**Log Levels**:
-- `INFO`: General application flow
-- `DEBUG`: Detailed debugging information
-- `ERROR`: Error conditions
-
-## Error Handling
-The application implements comprehensive error handling:
-- **400 Bad Request**: Invalid email format or validation errors
-- **404 Not Found**: User not found
-- **500 Internal Server Error**: Unexpected errors
 
 ## Security Considerations
-- Input validation on all endpoints
-- Email format validation
-- SQL injection prevention through JPA
-- Proper error messages without exposing sensitive information
+- Email validation is performed using regex pattern
+- Input validation using Jakarta Bean Validation
+- SQL injection prevention through JPA/Hibernate
+- Proper error handling without exposing sensitive information
+
+## Best Practices Implemented
+- ✅ Clean code architecture with separation of concerns
+- ✅ Proper package structure (controller, service, repository, model, exception)
+- ✅ Use of DTOs and proper layering
+- ✅ Comprehensive logging
+- ✅ Global exception handling
+- ✅ Input validation
+- ✅ Unit and integration testing
+- ✅ Use of Lombok to reduce boilerplate
+- ✅ RESTful API design with proper HTTP status codes
+- ✅ Documentation and comments
 
 ## Future Enhancements
-- Add authentication and authorization
-- Implement caching for frequently accessed users
-- Add pagination for bulk user retrieval
+- Add authentication and authorization (Spring Security)
+- Implement pagination for bulk user retrieval
+- Add caching (Redis/Caffeine)
+- Add API documentation (Swagger/OpenAPI)
 - Implement rate limiting
-- Add API documentation using Swagger/OpenAPI
-- Support for multiple database profiles (PostgreSQL, MySQL)
+- Add monitoring and metrics (Actuator, Prometheus)
+- Implement audit logging
+- Add Docker support
 
-## Jira Reference
-**Issue**: SCRUM-6 - Create service to retrieve user details by email ID
+## Troubleshooting
+
+### Port Already in Use
+If port 8080 is already in use, change it in `application.properties`:
+```properties
+server.port=8081
+```
+
+### Build Failures
+Ensure you have Java 17 and Maven installed:
+```bash
+java -version
+mvn -version
+```
+
+### Test Failures
+Clean and rebuild:
+```bash
+mvn clean install -U
+```
 
 ## License
 This project is licensed under the MIT License.
+
+## Contact
+For questions or support, please contact the development team.
+
+## Jira Issue Reference
+**Issue Key**: SCRUM-6  
+**Summary**: Create service to retrieve user details by email ID  
+**Status**: To Do  
+**Priority**: Medium  
+**Components**: User Management, Backend Services  
+**Labels**: enhancement  
+**Link**: https://aravindank.atlassian.net/browse/SCRUM-6
